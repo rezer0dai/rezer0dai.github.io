@@ -106,9 +106,18 @@ analytics:
 
 # Site Author
 author:
-  name             : "Peter ~ rezer0dai"
-  avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Find some bugs, do some RL, write some code, do rust and vim, lift weights, jump and stretch, eat ton of fruits and vegies, learn learn and learn..repeat!"
+  name             : "Peter Hlavaty ( @zer0mem )"
+  avatar           : "/assets/images/bio-photo.jpg"
+  bio              : "
+- Find some bugs, 
+- do some RL,
+- write some code,
+- do rust and vim,
+- lift weights, 
+- jump and stretch, 
+- eat ton of fruits and vegies,
+- learn learn and learn
+- ... repeat!"
   location         : # "Somewhere"
   email            :
   links:
@@ -117,7 +126,7 @@ author:
       # url: mailto:your.name@email.com
     - label: "Website"
       icon: "fas fa-fw fa-link"
-      # url: "https://your-website.com"
+      url: "https://http://www.zer0mem.sk/"
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/rezer0dai"
