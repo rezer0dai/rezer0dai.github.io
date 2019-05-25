@@ -106,18 +106,9 @@ analytics:
 
 # Site Author
 author:
-  name             : "Peter Hlavaty ( @zer0mem )"
+  name             : "Peter Hlavaty"
   avatar           : "/assets/images/bio-photo.jpg"
-  bio              : "
-- Find some bugs, 
-- do some RL,
-- write some code,
-- do rust and vim,
-- lift weights, 
-- jump and stretch, 
-- eat ton of fruits and vegies,
-- learn learn and learn
-- ... repeat!"
+  bio              : "Find some bugs, do some RL, write some code, do rust and vim, lift weights, jump and stretch, eat ton of fruits and vegies, learn learn and learn..repeat!"
   location         : # "Somewhere"
   email            :
   links:
