@@ -19,7 +19,7 @@ locale                   : "en-US"
 title                    : "Let strength be meassured by compassion and inteligence by knowledge, not by ignorance!"
 title_separator          : "-"
 name                     : "Peter - reze0dai ( zer0mem )"
-description              : "Find some bugs, do some RL, write some code, do rust and vim, lift weights, jump and stretch, eat ton of fruits and vegies, learn learn and learn..repeat!"
+description              : "Blogs and so on Research and Projects i do and think of.."
 url                      : https://rezer0dai.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : rezer0dai/rewheeler # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
@@ -108,7 +108,7 @@ analytics:
 author:
   name             : "Peter ~ rezer0dai"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Focus on Reinforcement Learning and Software Security ( offensive )"
+  bio              : "Find some bugs, do some RL, write some code, do rust and vim, lift weights, jump and stretch, eat ton of fruits and vegies, learn learn and learn..repeat!"
   location         : # "Somewhere"
   email            :
   links:
