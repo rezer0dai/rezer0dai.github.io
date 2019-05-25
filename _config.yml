@@ -117,7 +117,7 @@ author:
       # url: mailto:your.name@email.com
     - label: "Website"
       icon: "fas fa-fw fa-link"
-      url: "https://http://www.zer0mem.sk/"
+      url: "https://www.zer0mem.sk/"
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/rezer0dai"
