@@ -196,6 +196,8 @@ markdown_ext: "markdown,mkdown,mkdn,mkd,md"
 
 # Conversion
 markdown: kramdown
+use_math: true
+mathjax: true
 highlighter: rouge
 lsi: false
 excerpt_separator: "\n\n"
