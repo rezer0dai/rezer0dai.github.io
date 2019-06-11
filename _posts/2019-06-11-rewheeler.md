@@ -71,7 +71,7 @@ And once i look at it from more hacky standpoint, i never saw implementation for
 <br/>For GAE it is basically, as i look at it, credit assignment value, as from algorithm you can see only subtraction are active as basically every state between first and n-th one are canceling each other, and so only 'weighted' difference between state transitions are left - credit assigned, where reward from environment can really play only role of signal while Q-values between transitions are here the real deal!
 
 ### Conclusion
-As a result you can use floating-n-step + HER + GAE in one shot, implementation is bit tricky on part with replay buffer, what to store, when and how to recalculate, but it appears to works good in my case. Also it is needed to be careful when you can use HER and when not, k-step and HER can not interleave each other in episode, same apply if we rerandomize for replay buffer floating n-step then HER can not be used. More quirks and tricks related you can find [here](https://github.com/rezer0dai/rewheeler/alchemy/agent.py) and [here](https://github.com/rezer0dai/rewheeler/utils/policy.py).
+As a result you can use floating-n-step + HER + GAE in one shot, implementation is bit tricky on part with replay buffer, what to store, when and how to recalculate, but it appears to works good in my case. Also it is needed to be careful when you can use HER and when not, k-step and HER can not interleave each other in episode, same apply if we rerandomize for replay buffer floating n-step then HER can not be used. More quirks and tricks related you can find [here](https://github.com/rezer0dai/rewheeler/blob/master/alchemy/agent.py) and [here](https://github.com/rezer0dai/rewheeler/blob/master/utils/policy.py).
 
 ## Cross Algo Cooperation : PPO+DDPG
 Reinforcement learning has several [algorithms](https://lilianweng.github.io/lil-log/2018/02/19/a-long-peek-into-reinforcement-learning.html) working over [policy gradients](https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html) methods (DDPG, PPO, TRPO, ACER, ..) or value functions (DQN). I prefer working with policy methods as it allows me to work on continuous action spaces more naturally, and i am especially inclined to DDPG due its nice workarounds with backpropagation of value function loss trough policy network and usage of replay buffer. However algorithm like PPO results in more smooth changes of policy per update and are on-policy driven. On the value functions front DQN algorithm achieved big success on variety of Atari games partially due to discrete action space and proved very efficient.
@@ -163,14 +163,14 @@ def forward(self, data):
 i re-noise only one noisy layer for noisy network rather than full noise randomization. No actual tests on this front, but sounds to me legit and more intuitive.
 
 ### Conclusion
-For this project i prefer to use Noisy Networks, while i did some [modifications](https://github.com/rezer0dai/rewheeler/utils/nes.py) which was not properly evaluated in general but as for this case, Reacher Environment, seems works and in future i plan to test those modification to Noisy Networks in better detail. 
+For this project i prefer to use Noisy Networks, while i did some [modifications](https://github.com/rezer0dai/rewheeler/blob/master/utils/nes.py) which was not properly evaluated in general but as for this case, Reacher Environment, seems works and in future i plan to test those modification to Noisy Networks in better detail. 
 
 On the bottom line, seems introducing many noisy heads does not help as much, contradictory it seems breaks training, though need better evaluation and code corrections (mainly at part of synchronizing target with multiple explorer heads).
 
 ## RNN with goal
 As reinforcement learning tasks are sequence process by default, it sound for me more natural to encode state in form of hidden state of RNN rather than expect to be able to fit MDP to single state represenation by hand engineer or bunch of pixels. While RNN may be seen as natural fit for this, it becomes more tricky once you want to use approach like HER, as once you change goal your entire hidden state for given sequence of state-action pairs becomes invalid! But not necessary.. once you force RNN works only over state representation (pixels) and apply goal after RNN output, you can use RNN as intended. Though i see another problem with RNN, particulary usage of hidden state as state representation, where hidden state meaning/representation is changing with learning loops quite fast, so it need to be recalculated every so often which is performance overhead you need to deal with, likely pararelization is efficient choice as replay buffer can be utilized while learning.
 ### Conclusion
-Again not properly tested, though i highlighted it in this section as it required quite [engineering efforts](https://github.com/rezer0dai/rewheeler/utils/rnn.py), and i expect benefits out of it can manifest when used on raw input ( pixels -> pretrained CNN for features -> RNN -> goal -> action ).
+Again not properly tested, though i highlighted it in this section as it required quite [engineering efforts](https://github.com/rezer0dai/rewheeler/blob/master/utils/rnn.py), and i expect benefits out of it can manifest when used on raw input ( pixels -> pretrained CNN for features -> RNN -> goal -> action ).
 
 ## Implementation and Features
 In this section i briefly introduce some features and will point readers to the sourcecode.
@@ -207,13 +207,13 @@ class PPO(nn.Module):
   - last issue was replay buffer, as on every implementation i saw does not use it directly, they just use buffer to keep memorized all experience from last learning loop to current one and then do random rollouts. But using replay buffer will easier my cross algo implementation. And in fact, when we look at common ppo rollout buffer approaches at implementation level it is the same as having replay buffer as small to cover exactly that amount of experience. Actually i doubled buffer size to contain experience time period from last two learning steps up to current one, and experimenting with td error prioritization as well.
 
 ### N-state
-REWheeler framework allows you to stack 1..N states together, like multiple pixel screens across N-steps ( where N is chosen by configuration of [Bot](https://github.com/rezer0dai/rewheeler/alchemy/bot.py) and [Encoder](https://github.com/rezer0dai/rewheeler/utils/encoders.py) via **n_history** argument ). In addition this feature is built in [RNN](https://github.com/rezer0dai/rewheeler/utils/rnn.py) as well - check forward + extract features methods. No need for environment itself to support it, framework can stack it for you.
+REWheeler framework allows you to stack 1..N states together, like multiple pixel screens across N-steps ( where N is chosen by configuration of [Bot](https://github.com/rezer0dai/rewheeler/blob/master/alchemy/bot.py) and [Encoder](https://github.com/rezer0dai/rewheeler/blob/master/utils/encoders.py) via **n_history** argument ). In addition this feature is built in [RNN](https://github.com/rezer0dai/rewheeler/blob/master/utils/rnn.py) as well - check forward + extract features methods. No need for environment itself to support it, framework can stack it for you.
 ### Encoders
-Support of encoding state, from environment, trough different types of methods. Available to stack on top of each other. Example of encoders : RBF, Global normalization, Batch normalization, RNN. Implementation [here](https://github.com/rezer0dai/rewheeler/utils/encoders.py).
+Support of encoding state, from environment, trough different types of methods. Available to stack on top of each other. Example of encoders : RBF, Global normalization, Batch normalization, RNN. Implementation [here](https://github.com/rezer0dai/rewheeler/blob/master/utils/encoders.py).
 ### CrossBuffer
-Replay Buffer capable of sharing experience for different algorithms, for now no prioritization for simplicity, thats future TODO. Implementation [here](https://github.com/rezer0dai/rewheeler/utils/crossexp.py)
+Replay Buffer capable of sharing experience for different algorithms, for now no prioritization for simplicity, thats future TODO. Implementation [here](https://github.com/rezer0dai/rewheeler/blob/master/utils/crossexp.py)
 ### Seed-ed episode re-run
-If environment support running with seed, you can select how much times you want to run over same seed to gather more related sample trajectories for current policy, where noise will make difference between selection actions. Configure via **mcts_rounds** of [Env](https://github.com/rezer0dai/rewheeler/alchemy/env.py). Another parameter **mcts_random_cap** is for making seed collisions as training progress, aka trying to start from same start state with same seed but later on with updated policy to confront out theoretical progress (learning from same state but from replay buffer vs real interaction), however in current approach it will lead more to overfiting to given seeds, i will update approach to reflect more true purpose without side effect of overfiting.
+If environment support running with seed, you can select how much times you want to run over same seed to gather more related sample trajectories for current policy, where noise will make difference between selection actions. Configure via **mcts_rounds** of [Env](https://github.com/rezer0dai/rewheeler/blob/master/alchemy/env.py). Another parameter **mcts_random_cap** is for making seed collisions as training progress, aka trying to start from same start state with same seed but later on with updated policy to confront out theoretical progress (learning from same state but from replay buffer vs real interaction), however in current approach it will lead more to overfiting to given seeds, i will update approach to reflect more true purpose without side effect of overfiting.
 ### Replay cleaning
 As my adaptation of PPO algorithm works with replay buffer, i implemented testing feature, where you can deprioritize state-action transitions which are no more enough probable under PPO policy agent. Configurable trough **replay_cleaning** and **prob_treshold** of BrainDescription, for DDPG this configuration does not have effect.
 ### Online learning
@@ -229,7 +229,7 @@ In this framework i allow to learn from imidiate experience ( online ) for any t
   - via multiple agents you can use framework on multiple agent competitive / cooperation task (using MADDPG idea via MROCS implementation)
 
 ### Task wrapper
-All the magic of applying rewheeler framework to another task should happen in [task wrapper](https://github.com/rezer0dai/rewheeler/task.py). Setuping when goal is met, how to step and what to return ( able to intercept values from environment ), separate goal from state, how to reset environment, and of course which environment to work with.
+All the magic of applying rewheeler framework to another task should happen in [task wrapper](https://github.com/rezer0dai/rewheeler/blob/master/task.py). Setuping when goal is met, how to step and what to return ( able to intercept values from environment ), separate goal from state, how to reset environment, and of course which environment to work with.
 
 I temporarely put there also HER implementation / recalculation, but that could be done in more abstract way.
 
@@ -241,7 +241,7 @@ Idea for LunarLander, environment of OpenAI gym, was to skip most of the steps f
 ### Curiosity PrioReplayBuff
 Originally i wanted prioritize replay buffer experience based on how unexpected is state-action transition, but on the other side similiar thing is achieved via TD-error. As when td-error is almost 0, it means critic sucessfully predict outcome of actors(policy) actions and understand environment to that respect, and it is almost equal to my original idea - how is unexpected state-action transition. Soo.. i just abandon this completly as reinwenting wheel once again.
 ### Encoders double learning
-Current [implementation](https://github.com/rezer0dai/rewheeler/utils/ac.py) i allow to learn encoders ( RNN, or other encoder with gradients ) only trough critic learning, not actor one. I tried different combinations but others did not work well that time, but to be honest i did not have that time properly working framework / algorithm, so it deservers several more experiments.
+Current [implementation](https://github.com/rezer0dai/rewheeler/blob/master/utils/ac.py) i allow to learn encoders ( RNN, or other encoder with gradients ) only trough critic learning, not actor one. I tried different combinations but others did not work well that time, but to be honest i did not have that time properly working framework / algorithm, so it deservers several more experiments.
 
 ### TODO
 - run tests on more complex environments with fetch and deliver object as a starter
@@ -291,7 +291,7 @@ def fun_reward(s, n, goal, her): # 3D navigation
 
 ## Jupyter notebooks
 For checking my results / experiments you can follow rewheeler repo. In Particular :
-  - [cross algo cooperation v1](https://github.com/rezer0dai/rewheeler/COOP_v1.ipynb) ( DDPG from replay buffer )
-  - [cross algo cooperation v2](https://github.com/rezer0dai/rewheeler/COOP_v2.ipynb) ( DDPG actively steps in environment 3:7 + replay buffer )
-  - [DDPG](https://github.com/rezer0dai/rewheeler/DDPG.ipynb) ( could be tunned better i believe, but needs more hypeparams tunning )
-  - [PPO](https://github.com/rezer0dai/rewheeler/PPO.ipynb) ( pushed towards off-policy fashion, i need todo more tests on on-policy vs of-policy )
+  - [cross algo cooperation v1](https://github.com/rezer0dai/rewheeler/blob/master/COOP_v1.ipynb) ( DDPG from replay buffer )
+  - [cross algo cooperation v2](https://github.com/rezer0dai/rewheeler/blob/master/COOP_v2.ipynb) ( DDPG actively steps in environment 3:7 + replay buffer )
+  - [DDPG](https://github.com/rezer0dai/rewheeler/blob/master/DDPG.ipynb) ( could be tunned better i believe, but needs more hypeparams tunning )
+  - [PPO](https://github.com/rezer0dai/rewheeler/blob/master/PPO.ipynb) ( pushed towards off-policy fashion, i need todo more tests on on-policy vs of-policy )
