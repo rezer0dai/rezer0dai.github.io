@@ -82,7 +82,7 @@ And there i was wondering if i can benefit from *different methods into single l
 {:refdef: style="text-align: center;"}
 ![DDPG](https://rezer0dai.github.io/assets/images/ddpg.png "learning progress")
 {: refdef}
-.. as you can see DDPG is somehow fast to understand what it should do from start, i guess more informative gradient signal, but as learning progress it can stagnate on 'local minima' pretty long time. You can check full training [here](https://rezer0dai.github.io/rewheeler/#jupyter-notebooks).
+.. as you can see DDPG is somehow fast to understand what it should do from start, i guess more informative gradient signal, but as learning progress it can stagnate on 'local minima' pretty long time (however that local minima could be because my substituted reward actually encourage different than default behaviour, as you can see from learning graph at notebook it actually keeps its cool and learn my reward function progresivelly all the time). You can check full training [here](https://rezer0dai.github.io/rewheeler/#jupyter-notebooks).
 
 {:refdef: style="text-align: center;"}
 ![PPO](https://rezer0dai.github.io/assets/images/ppo.png "learning progress")
