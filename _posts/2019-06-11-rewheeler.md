@@ -39,8 +39,19 @@ td_error = qa - td_targets
 It is n-state td-error, but it caculates value for given state not n-step forward from it, utilizing it as n-state approximation is done via further discounting. Well, this may seems obvious, but from this point i did not had any objection to try Floating-N-Step approximation!
 
 *In **floating n-step** every learning loop i select not 'fixed n for state', but k-step one where k is randomly selected from range <1,n>.*
-On the other side disadvantage is that it takes more computation power as i need it to recalculate it every time as i want to re-randomize k for learning. However this approach theoretically should lead to better generalization and more efficient use of past experience, as we now are able to use n times more distinct td-errors to learn from one episode.
+On the other side disadvantage is that it takes more computation power as i need it to recalculate it every time as i want to re-randomize k for learning. However this approach theoretically should lead to better generalization and more efficient use of past experience, as we now are able to use n times more distinct td-errors to learn from one episode. [code](https://github.com/rezer0dai/rewheeler/blob/master/alchemy/agent.py) looks like :
+```python
+def _random_n_step(self, length):
+    do_n_step = lambda n: self.n_step if not self.floating_step else random.randint(n, self.n_step)
+    n_step = lambda i: do_n_step(1 if length-1>i+self.n_step else (length-i-1))
+    return self._do_random_n_step(length, n_step)
 
+def _do_random_n_step(self, length, n_step):
+    n_steps = [ n_step(i) for i in range(length - self.n_step) ]
+    indices = np.asarray(n_steps) + np.arange(len(n_steps))
+    indices = np.hstack([indices, self.n_step*[-1]])
+    return n_steps, indices
+```
 OK, but what it has in common with HER ? well, HER can be seen as natural floating n-step approximation extension.
 As now in floating n step is natural to have k equal to 1 (with probability 1:n), which is exactly case of HER, and rest non 1 equal k steps transitions will be evaluated without HER(no goal replacement), while ratio (HER vs k-step) for td-error computation should be subject of hyperparameters tuning.
 ### N-step GAE
