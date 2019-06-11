@@ -98,10 +98,10 @@ social:
 
 # Analytics
 analytics:
-  provider               : false # false (default), "google", "google-universal", "custom"
+  provider               : "google-universal" # false # false (default), "google", "google-universal", "custom"
   google:
-    tracking_id          :
-    anonymize_ip         : # true, false (default)
+    tracking_id          : UA-141913999-1
+    anonymize_ip         : true #, false (default)
 
 
 # Site Author
@@ -196,6 +196,7 @@ markdown_ext: "markdown,mkdown,mkdn,mkd,md"
 
 # Conversion
 markdown: kramdown
+use_math: true
 mathjax: true
 highlighter: rouge
 lsi: false
