@@ -53,7 +53,7 @@ def _do_random_n_step(self, length, n_step):
     return n_steps, indices
 ```
 OK, but what it has in common with HER ? well, HER can be seen as natural floating n-step approximation extension.
-As now in floating n step is natural to have k equal to 1 (with probability 1:n), which is exactly case of HER, and rest non 1 equal k steps transitions will be evaluated without HER(no goal replacement), while ratio (HER vs k-step) for td-error computation should be subject of hyperparameters tuning.
+As now in floating n step is natural to have k equal to 1 (with probability 1:n), which is exactly case of HER, and rest non 1 equal k steps transitions will be evaluated without HER(no goal replacement), while ratio (HER vs k-step) for td-error computation should be subject of hyperparameters tuning (**her_max_ratio**).
 ### N-step GAE
 Another important part of reinforcement learning is credit assignment problem. Where there are multiple approaches to tackle it, namely [Rudder](https://arxiv.org/abs/1806.07857) which using LSTM and try to backtrack how to decompose reward based on contribution of particular action states transitions. Where other approach named [GAE using eligibility traces](https://arxiv.org/abs/1506.02438) looks at this problem from bit different different angle and using more straightforward approach (it is worth to check nice article explaining GAE and introducing [Online GAE](http://www.breloff.com/DeepRL-OnlineGAE/)) :
 
@@ -88,7 +88,7 @@ As a result you can use floating-n-step + HER + GAE in one shot, implementation 
 Reinforcement learning has several [algorithms](https://lilianweng.github.io/lil-log/2018/02/19/a-long-peek-into-reinforcement-learning.html) working over [policy gradients](https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html) methods (DDPG, PPO, TRPO, ACER, ..) or value functions (DQN). I prefer working with policy methods as it allows me to work on continuous action spaces more naturally, and i am especially inclined to DDPG due its nice workarounds with backpropagation of value function loss trough policy network and usage of replay buffer. However algorithm like PPO results in more smooth changes of policy per update and are on-policy driven. On the value functions front DQN algorithm achieved big success on variety of Atari games partially due to discrete action space and proved very efficient.
 
 And there i was wondering if i can benefit from *different methods into single learning process*.
-<br/>Lets at first see some learning stats of DDPG and PPO respectivelly :
+<br/>Lets at first see some learning stats on Reacher environment of DDPG and PPO respectivelly :
 
 {:refdef: style="text-align: center;"}
 ![DDPG](https://rezer0dai.github.io/assets/images/ddpg.png "learning progress")
@@ -162,7 +162,7 @@ However ... with OUNoise it wont happen, or at least very unlikely! To see why l
 {% gist 10620e30f32c9d394f980851d8619132 %}
 Random agent as expected get stuck 99% of times and nothing interesting going on, actually that one i would expect of random noise.But when we look at results from OUNoise agen, its totally different cup of tea, it is like expert behaviour, comparsion to random noise. And that said, our agent learns from solved trajectories and it learns only to optimize it trough given reward function, not actually figuring out how to get goal met in first place. 
 Therefore, in my opinion, OUNoise can be very effective at some particular tasks but on the others it can bias exploration of agent which is core of learning.
-Mostly for those reasons, but also for some others, i prefer noisy networks, which adds Gaussian noise to parameters of network and not only to output itself. However i made few modifications to those. 
+Mostly for those reasons, but also for some others, i prefer [noisy networks](https://arxiv.org/abs/1706.10295), which adds Gaussian noise to parameters of network and not only to output itself. However i made few modifications to those. 
 - Noisy Heads : OUNoise can be added per environment for single actor and so theoretically enforce better exploration, whereas with plain noisy networks you have one noise for one agent. For this purpose i allowed actor have multiple noise, sigma and noise, while sharing same network parameters for non-noisy deterministic part. This way i have multiple agents with same network but noise. Example implmenetation of forward push :
 ```python
 def forward(self, data):
@@ -179,12 +179,12 @@ For this project i prefer to use Noisy Networks, while i did some [modifications
 On the bottom line, seems introducing many noisy heads does not help as much, contradictory it seems breaks training, though need better evaluation and code corrections (mainly at part of synchronizing target with multiple explorer heads).
 
 ## RNN with goal
-As reinforcement learning tasks are sequence process by default, it sound for me more natural to encode state in form of hidden state of RNN rather than expect to be able to fit MDP to single state represenation by hand engineer or bunch of pixels. While RNN may be seen as natural fit for this, it becomes more tricky once you want to use approach like HER, as once you change goal your entire hidden state for given sequence of state-action pairs becomes invalid! But not necessary.. once you force RNN works only over state representation (pixels) and apply goal after RNN output, you can use RNN as intended. Though i see another problem with RNN, particulary usage of hidden state as state representation, where hidden state meaning/representation is changing with learning loops quite fast, so it need to be recalculated every so often which is performance overhead you need to deal with, likely pararelization is efficient choice as replay buffer can be utilized while learning.
+As reinforcement learning tasks are sequence process by default, it sound for me more natural to encode state in form of hidden state of GRU rather than expect to be able to fit MDP to single state represenation by hand engineer or bunch of pixels. While RNN may be seen as natural fit for this, it becomes more tricky once you want to use approach like HER, as once you change goal your entire hidden state for given sequence of state-action pairs becomes invalid! But not necessary.. once you force RNN works only over state representation (pixels) and apply goal after RNN output, you can use RNN as intended. Though i see another problem with RNN, particulary usage of hidden state as state representation, where hidden state meaning/representation is changing with learning loops quite fast, so it need to be recalculated every so often which is performance overhead you need to deal with, likely pararelization is efficient choice as replay buffer can be utilized while learning.
 ### Conclusion
 Again not properly tested, though i highlighted it in this section as it required quite [engineering efforts](https://github.com/rezer0dai/rewheeler/blob/master/utils/rnn.py), and i expect benefits out of it can manifest when used on raw input ( pixels -> pretrained CNN for features -> RNN -> goal -> action ).
 
 ## Implementation and Features
-In this section i briefly introduce some features and will point readers to the sourcecode.
+In this section i briefly introduce some features and will point readers to the source code.
 ### PPO
 In this post i mentioned i am using PPO (alongside DDPG), though i mention several times replay buffer and soft actor critic in that context. Thats right, actually my implementation bit deviate from standard one exactly in those aspects. Main reason behind it was that i wanted in rewheeler use one or another algorithm (ppo/ddpg/dqn/..) interchangeable or in tandem (cooperatitive).
   - First for using it this way i needed to create *Policy Heads* for actor at top of its policy neural net architecture, which outputs distribution. For DDPG / DQN distribution outputs original predictions so its just dummy wrapper, while PPO / REINFORCE / TRPO outputs by nature distribution, then only one place which need to deal differently for dummy and normal distribution is when working with policy loss but this is easy to handle by checking active gradients.
@@ -246,18 +246,18 @@ I temporarely put there also HER implementation / recalculation, but that could 
 
 ## What did not worked as expected
 ### Critics with different objective
-Originally i intended to have one critic per subtask, in 3D navigation it means 3 separate critics per dimension. Follows by using attention layer for actor loss trough DDPG. However i was not able to make reasonable results with it, i guess mainly because it is highly desynchronized, but also i had less experience. This method was abandoned and replaced with MROCS approach.
+Originally i intended to have one critic per subtask, in 3D navigation it means 3 separate critics, one per dimension. Follows by using attention layer for actor loss trough DDPG. However i was not able to make reasonable results with it, i guess mainly because it is highly desynchronized, but also i had less experience. This method was abandoned and replaced with MROCS approach.
 ### Good experience
 Idea for LunarLander, environment of OpenAI gym, was to skip most of the steps from replaying. As those was mostly falling to the ground, while most important looks to me first steps when we start descending ( interesting angle from where we are dropped ) and last steps, when we starting to see in state landing ground. There i tried and failed.. well as my RL algo does not work at that environment even with standard reward and methodology, and recently i did not redo tests with my current framework. This feature is configurable via **good_reach** in BrainDescription (means state will appear in replay buffer draw only when during one episode in 1..goad_reach forward distance from that state appeared at least one good state, aka it make sense to learn from). If state is good or not you will define via task wrapper as one of returns of step function. Default setting is goad_reach=1, and good=[True]\*len(states), it means all states are good and can be used for replay learning.
 ### Curiosity PrioReplayBuff
-Originally i wanted prioritize replay buffer experience based on how unexpected is state-action transition, but on the other side similiar thing is achieved via TD-error. As when td-error is almost 0, it means critic sucessfully predict outcome of actors(policy) actions and understand environment to that respect, and it is almost equal to my original idea - how is unexpected state-action transition. Soo.. i just abandon this completly as reinwenting wheel once again.
+Originally i wanted prioritize replay buffer experience based on how unexpected is state-action transition, but on the other side similiar thing is achieved via TD-error. As when td-error is almost 0, it means critic sucessfully predict outcome of actors(policy) actions and understand environment to that respect, and it is almost equal to my idea - how is unexpected state-action transition. Soo.. i just abandon this completly as reinventing wheel once again.
 ### Encoders double learning
 Current [implementation](https://github.com/rezer0dai/rewheeler/blob/master/utils/ac.py) i allow to learn encoders ( RNN, or other encoder with gradients ) only trough critic learning, not actor one. I tried different combinations but others did not work well that time, but to be honest i did not have that time properly working framework / algorithm, so it deservers several more experiments.
 
 ### TODO
 - run tests on more complex environments with fetch and deliver object as a starter
 - td error as reward signal for curiosity driven tasks :
-  Idea is basically that td error give us some idea how unexpected/novel was state (wrt environment+policy), we can use this as a signal and add up to reward, though i think will be good to recalculate it overtime (so deduct from original reward original surprise signal and add current surprise). Well but this is just idea i recenly think little bit, did not have chance to do any hands on it yet.
+  Idea is basically that td error give us some idea how unexpected/novel was state (wrt environment+policy), we can use this as a signal and replace/add up to reward, though i think will be good to recalculate it overtime (so deduct from original reward original surprise signal and add current surprise). Well but this is just idea i recenly think little bit, did not have chance to do any hands on it yet.
 - pararelism of replay buffer: floating n-step recalc, n-step GAE, reanalysing experience, RNN feature recalc. As now drawing and recalculating in replay buffer is done in sync with learning, however it can be done with multiple workers anytime considering certain constraints, thats why i dont see big problem in performance overhead with recalculating data in replay buffer as we can scale it.
 - encoders learning, combinations critic/actor only/together
 - good experience triage, likely on LunarLander environment
@@ -266,7 +266,7 @@ Current [implementation](https://github.com/rezer0dai/rewheeler/blob/master/util
 - GPU, currently i have access to only limited resources where GPU is not of those, but will do later on
 
 ## Reacher environment UnityML
-Reacher environment episode is originally 1000 steps length (i cut it in 70 steps instead), have relatively complex reward function, and not exactly specified state-goal connection.
+Reacher environment episode is originally 1000 steps length (i cut it in 70 steps instead), have relatively complex reward function, and not exactly specified state-goal connection. Same time allows to run 20-'agents' same time.
   - first was essential to transform state :
 ```python
 def transform(obs):
