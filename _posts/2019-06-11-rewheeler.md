@@ -15,7 +15,7 @@ tags:
 
 Reinforcement Learning project, which trying to address OpenAI Request for reseach for [HER](https://openai.com/blog/ingredients-for-robotics-research/) edition. And next iteration of original [Wheeler project](https://github.com/rezer0dai/wheeler).
 
-I used [Reacher UnityML environment](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md) for testing rewheeler, where i did several [modifications](https://rezer0dai.github.io/test-post/#reacher-environment-unityml) to state representation, reward function, length of episode..
+I used [Reacher UnityML environment](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md) for testing rewheeler, where i did several [modifications](https://rezer0dai.github.io/rewheeler/#reacher-environment-unityml) to state representation, reward function, length of episode..
 
 As a note project is heavily *Replay Buffer oriented*!
 
@@ -82,13 +82,13 @@ And there i was wondering if i can benefit from *different methods into single l
 {:refdef: style="text-align: center;"}
 ![DDPG](https://rezer0dai.github.io/assets/images/ddpg.png "learning progress")
 {: refdef}
-.. as you can see DDPG is somehow fast to understand what it should do from start, i guess more informative gradient signal, but as learning progress it can stagnate on 'local minima' pretty long time. You can check full training [here](https://rezer0dai.github.io/test-post/#jupyter-notebooks).
+.. as you can see DDPG is somehow fast to understand what it should do from start, i guess more informative gradient signal, but as learning progress it can stagnate on 'local minima' pretty long time. You can check full training [here](https://rezer0dai.github.io/rewheeler/#jupyter-notebooks).
 
 {:refdef: style="text-align: center;"}
 ![PPO](https://rezer0dai.github.io/assets/images/ppo.png "learning progress")
 {: refdef}
-.. on the otherside, you can see, that PPO is way too slow to catch up what todo at begining but do quite leaps once it figure it out, and can converge blazingly fast. You can check full training [here](https://rezer0dai.github.io/test-post/#jupyter-notebooks).
-<br/>Actually this can be quite biased output on PPO vs Reacher, as i used bit [different PPO implementation](https://rezer0dai.github.io/test-post/#ppo), though in this case it actually helps to demonstrate potential of idea for cross cooperation.
+.. on the otherside, you can see, that PPO is way too slow to catch up what todo at begining but do quite leaps once it figure it out, and can converge blazingly fast. You can check full training [here](https://rezer0dai.github.io/rewheeler/#jupyter-notebooks).
+<br/>Actually this can be quite biased output on PPO vs Reacher, as i used bit [different PPO implementation](https://rezer0dai.github.io/rewheeler/#ppo), though in this case it actually helps to demonstrate potential of idea for cross cooperation.
 
 So there i start thinking how to **combine** them to get benefits or both.
 {:refdef: style="text-align: center;"}
@@ -103,7 +103,7 @@ So there i start thinking how to **combine** them to get benefits or both.
 {: refdef}
   - every X-episodes synchronize ddpg explorer policy network from ppo as pattern, while ppo will get updated its explorer after every episode from ddpg for enhanced exploration ( as ddpg will update faster, but ppo updates are more stable )
   - i did several experiments and the one most (3+ times speedup for learning) payed of, when ddpg did learn only from experience of synced ppo algorithm, and ddpg itself was not actively used for interacting with environment while learning (actually it was used but only 1:10 due to simplicity of implementation), on the other side ppo explorer was synced every episode with ddpg one, and ddpg explorer was synced with ppo every second learning round of ppo
-  - good results yields also when DDPG actively join exploration in environment, especially it manifest better learning from the beggining but worse at later stages ( inherited more of ddpg specifics in this environment ), but i changed there approach of synchronizing, every second PPO learning loop i exchanged full target+explorer networks ( full swap DDPG <-> PPO ), at [jupyter notebooks section](https://rezer0dai.github.io/test-post/#jupyter-notebooks) it is refered as coop_v2.
+  - good results yields also when DDPG actively join exploration in environment, especially it manifest better learning from the beggining but worse at later stages ( inherited more of ddpg specifics in this environment ), but i changed there approach of synchronizing, every second PPO learning loop i exchanged full target+explorer networks ( full swap DDPG <-> PPO ), at [jupyter notebooks section](https://rezer0dai.github.io/rewheeler/#jupyter-notebooks) it is refered as coop_v2.
 
 {:refdef: style="text-align: center;"}
 ![COOP_v1](https://rezer0dai.github.io/assets/images/coop_v1.png "coop_v1")
@@ -124,7 +124,7 @@ Here similarity between HER and MROCS is that it assign 1/0 rewards per **subtas
 Whole mechanics behind that separation, is to use it on more complex task, but unfortunately i did not realized that test yet. As an example we can take tasks with fetching object and bringing it to destination. Here instead of only X-Y-Z rewards per dimension for location of arm, we can add also same for object, then another 1/0 reward if object is fetched, 1/0 rewards for reaching goal with fetched object per dimension.
 
 ### Multiple Agents
-Actually my [original approach to separate subtask failed](https://rezer0dai.github.io/test-post/#critics-with-different-objective), and i come up with MROCS idea on different (multi agent) task after reading [MADDPG paper](https://arxiv.org/abs/1706.02275). MADDPG uses very nice trick, as critic is not used for testing in real environment but only during training time, therefore it may have access to more information during training than it have in testing (never used in testing to be precise, aka critic can learns whatever helps at training), while actor have access only to information he has access also in testing time. Therefore MADDPG critic access to both agents states, as multiagent environment, however in MROCS i forced critic to output also multiple rewards and maximize their mean as non-cooperation competitive game by single critic, alongside with some [other tricks](https://github.com/rezer0dai/MROCS/blob/master/brain.py) like bit different state-action pairs from replay buffer used for training. Which seems works [pretty well](https://github.com/rezer0dai/MROCS/blob/master/MROCS.ipynb) at least for Tenis UnityML environment.
+Actually my [original approach to separate subtask failed](https://rezer0dai.github.io/rewheeler/#critics-with-different-objective), and i come up with MROCS idea on different (multi agent) task after reading [MADDPG paper](https://arxiv.org/abs/1706.02275). MADDPG uses very nice trick, as critic is not used for testing in real environment but only during training time, therefore it may have access to more information during training than it have in testing (never used in testing to be precise, aka critic can learns whatever helps at training), while actor have access only to information he has access also in testing time. Therefore MADDPG critic access to both agents states, as multiagent environment, however in MROCS i forced critic to output also multiple rewards and maximize their mean as non-cooperation competitive game by single critic, alongside with some [other tricks](https://github.com/rezer0dai/MROCS/blob/master/brain.py) like bit different state-action pairs from replay buffer used for training. Which seems works [pretty well](https://github.com/rezer0dai/MROCS/blob/master/MROCS.ipynb) at least for Tenis UnityML environment.
 
 From that point i moved to MROCS approach to output multiple values also for navigation, but this time, as described above, with more subtasks sparsely rewarded rather than complex single reward value per agent. And that i used for this [REWheeler project](https://github.com/rezer0dai/rewheeler) evaluated on [Reacher UnityML environment](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md).
 
