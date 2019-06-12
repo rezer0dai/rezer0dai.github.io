@@ -302,7 +302,10 @@ def fun_reward(s, n, goal, her): # 3D navigation
 
 ## Jupyter notebooks
 For checking my results / experiments you can follow rewheeler repo. In Particular :
-  - [cross algo cooperation v1](https://github.com/rezer0dai/rewheeler/blob/master/COOP_v1.ipynb) ( DDPG from replay buffer )
-  - [cross algo cooperation v2](https://github.com/rezer0dai/rewheeler/blob/master/COOP_v2.ipynb) ( DDPG actively steps in environment 3:7 + replay buffer )
-  - [DDPG](https://github.com/rezer0dai/rewheeler/blob/master/DDPG.ipynb) ( could be tunned better i believe, but needs more hypeparams tunning )
-  - [PPO](https://github.com/rezer0dai/rewheeler/blob/master/PPO.ipynb) ( pushed towards off-policy fashion, i need todo more tests on on-policy vs of-policy )
+  - [cross algo cooperation v1](https://github.com/rezer0dai/rewheeler/blob/master/COOP_v1.ipynb) ( periodically sync, both ways but different timing, of explorer networks )
+  - [cross algo cooperation v2](https://github.com/rezer0dai/rewheeler/blob/master/COOP_v2.ipynb) ( periodically swap full actor networks ~ need to do more tests with PPO more on-policy fashion )
+  - [DDPG](https://github.com/rezer0dai/rewheeler/blob/master/DDPG.ipynb) ( could be tunned better i believe, but needs more hypeparams tunning. And seems it learns really good my reward function, though it is slowest to learn the one of environment )
+  - [PPO off](https://github.com/rezer0dai/rewheeler/blob/master/PPO.ipynb) ( pushed towards off-policy fashion, i need todo more tests on on-policy vs of-policy )
+  - [PPO on](https://github.com/rezer0dai/rewheeler/blob/master/PPO_ON.ipynb) ( On-Policy ~ fast convergence )
+
+For pre-trained weights let me know (twitter / github) i will share with you, but should be not a problem to train it by yourself. In anyway dont hesitate to ping me.
