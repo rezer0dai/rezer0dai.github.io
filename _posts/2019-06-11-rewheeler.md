@@ -307,5 +307,6 @@ For checking my results / experiments you can follow rewheeler repo. In Particul
   - [DDPG](https://github.com/rezer0dai/rewheeler/blob/master/DDPG.ipynb) ( could be tunned better i believe, but needs more hypeparams tunning. And seems it learns really good my reward function, though it is slowest to learn the one of environment )
   - [PPO off](https://github.com/rezer0dai/rewheeler/blob/master/PPO.ipynb) ( pushed towards off-policy fashion, i need todo more tests on on-policy vs of-policy )
   - [PPO on](https://github.com/rezer0dai/rewheeler/blob/master/PPO_ON.ipynb) ( On-Policy ~ fast convergence )
+  - [cross algo cooperation v2 - on+off smoothing](https://github.com/rezer0dai/rewheeler/blob/master/onoff_COOP_v2.ipynb) ( from on-policy PPO towards off, swaping DDPG + PPO networks )
 
 For pre-trained weights let me know (twitter / github) i will share with you, but should be not a problem to train it by yourself. In anyway dont hesitate to ping me.
