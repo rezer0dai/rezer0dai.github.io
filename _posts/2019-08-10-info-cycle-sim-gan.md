@@ -11,8 +11,6 @@ tags:
 
 {% include toc %}
 
-# GANs : utilization, loss, training, code
-
 ## Contribution
 In this project I focused on [InfoGAN](https://arxiv.org/abs/1606.03657) and [CycleGAN](https://arxiv.org/abs/1703.10593) respectively. Mainly I utilized InfoGAN to train in CycleGAN fashion, therefore using only one generator - critic pair for transfer image from one to different domain, with possibility to easy extend this approach to more than two domains. On another front i experimented with novel (and maybe not so novel) loss function for training GAN (re)branding it SimGAN (Similiarity GAN). I also provide source code from my experiments where i implemented slightly different training schema, and easily extensible trough generator loss function via callback. Though code is is still experimental and in progress state. 
 
