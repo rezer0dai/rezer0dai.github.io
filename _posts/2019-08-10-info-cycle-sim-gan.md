@@ -175,8 +175,10 @@ However, with this loss, one need to be careful to not let it saturate as it see
  - as idea of training critic more often than generator sounds really interesting to me, i opt-in to framework. On the other side i allows critic to have smaller batches than generator for trainig but not the other way around, wich may be interesting to experiment with as well
  - follows from my rewheeler poject, i left code in framework to experiment with having multiple citics too
  - another thing to mention is, for InfoGAN doing CycleGAN training i focused in this post on
-   adversial and label loss, and i ommited space ( latent code ) loss. It is due fact that in my
-   experiments i was not able to manifest power of space loss, nevertheless it is definitelly way
-   which need to explore. As we can see from pictures of MNIST with 13 labels, there variation of
-   space loss did not only manuever via italic+bold font style, but also smooth inside its label
-   category which can be very usefull feature to have!
+   adversial and label loss, and i ommited space ( latent code ) loss. It is due the fact that in my
+   experiments i was not able to manifest power of space loss, which is partialy logical due to
+   nature of CycleGAN training ( mainly identity pixel loss ) so some trick should be used to make it work.
+   Nevertheless it is definitelly way which need to be explored. 
+   As we can see from pictures of MNIST with 13 labels, there variation of space loss did not only 
+   manuever via italic+bold font style, but also smooth inside its label category which can be very 
+   usefull feature to have!
