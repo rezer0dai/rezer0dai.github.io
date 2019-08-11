@@ -163,9 +163,9 @@ def __call__(self, fake, real, label_cuts):
 ```
 And it appears to works, at least in scope of my limited tested environment tests ( MNIST, cyclegan : apple2orange, horse2zebra ). Actually above images from [InfoGAN is all you need](https://rezer0dai.github.io/info-cycle-sim-gan/#infogan-is-all-you-need) are generated via this cosine loss. But here we are back to generator and critic to follow inverse objectives. Here are some generated samples for MNIST dataset with this approach : 
 {:refdef: style="text-align: center;"}
-![horse from info-cycle-simgan](https://rezer0dai.github.io/assets/images/infog_horse.png =100x)
-![MNIST with only 7 classes](https://rezer0dai.github.io/assets/images/infog_mnist7.png =100x)
-![apple to orange info-cycle-simgan](https://rezer0dai.github.io/assets/images/infog_app2orange.png =100x)
+![horse from info-cycle-simgan](https://rezer0dai.github.io/assets/images/infog_horse.png){: height="100px" width="100px"}
+![MNIST with only 7 classes](https://rezer0dai.github.io/assets/images/infog_mnist7.png){: height="100px" width="100px"}
+![apple to orange info-cycle-simgan](https://rezer0dai.github.io/assets/images/infog_app2orange.png){: height="100px" width="100px"}
 {: refdef}
 However, with this loss, one need to be careful to not let it saturate as it seems it easily happen. To avoid that batch should be composed of aproximatelly same ratio of images of different labels, and similarity should be measured in between same labels only. If labels are not available then mean over all sampes shoud do the job. To be noted, with my experiments i have [GP penalty](https://arxiv.org/abs/1704.00028), or rather its variant [DRAGAN](https://arxiv.org/abs/1705.07215), on by default..
 
