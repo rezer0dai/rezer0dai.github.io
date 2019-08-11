@@ -17,7 +17,7 @@ In this project I focused on [InfoGAN](https://arxiv.org/abs/1606.03657) and [Cy
 ## Introduction
 Two neural networks compete / cooperate to improve each other generative (generator) and classification (critic / discriminator) ability, in short : *"Generative Adversarial Networks"*. 
 Starting perhaps chronologically pretty much the idea was described in this blog post on [cLSGAN](https://web.archive.org/web/20120312111546/http://yehar.com:80/blog/?p=167), and independently kicked off by this paper [GAN](https://arxiv.org/abs/1406.2661). While the second mentioned introduced z-noise vector and expand view on generator - discriminator as zero-sum game, provide implementation, results, underlying math and literally kicked of this field with huge potential of application. Other papers follow, from where i pickup selection, which i consider most influential ones for me :  
-  - [LSGAN](https://arxiv.org/abs/1807.00734)
+  - [LSGAN](https://arxiv.org/abs/1611.04076)
     - changed loss function to root squared error, which naturally remove need of sigmoid and negative log likelihood    
   - [WGAN](https://arxiv.org/abs/1701.07875)
     - introduce different distribution distance metric to GANs
@@ -39,7 +39,7 @@ else: #competition setting
 err_total = (err_g_real + err_g_fake) / 2.
 ```
 
-Those papers was influential, for me, in a way, that it draws me back from viewing GANs as **zero-sum game**, to more of **cLSGAN + Adversarial sampling**.
+Those papers were influential, for me, in a way, that it draws me back from viewing GANs as **zero-sum game**, to more of **cLSGAN + Adversarial sampling**.
 
 ## InfoGAN is all you need
 There I moved to another nice paper called **Information Maximizing Generative Adversarial Nets (InfoGAN)**, which is breakthrough, at last for me, as it shows how to train classification, and generator as well, network in basically **unsupervised** manner via GANs. Details I encourage you to read in paper, but basic idea is to introduce labels to generator's input and critic's output and backprop it trough binary cross entropy. You can correct labels to correspond with our perception ( like in MNIST 10 labels, where you can force label 0 to relate to digit 0 ) via adding ground truth loss for labels, but in general case no need to do that, and critic will assign its own labeling (aka you can setup InfoGAN for MNIST dataset with 20, 10, or 4 labels and critic will handle it its own way, and will group images on its own labeling). 
@@ -90,6 +90,9 @@ def cycle_callback(
 Source code you can find [here](https://github.com/rezer0dai/info-cycle-sim-gan), which is basically my initial GAN framework I currently work with. For reference some output of training :
 {:refdef: style="text-align: center;"}
 ![InfoGAN for domain transfer : apple2orange](https://rezer0dai.github.io/assets/images/apple2orange_infog.png)
+{: refdef}
+
+{:refdef: style="text-align: center;"}
 ![InfoGAN for domain transfer : horse2zebra](https://rezer0dai.github.io/assets/images/horse2zebra_infog.png)
 {: refdef}
 I admit horse2zebra are not too breath taking, and with implementation of original CycleGAN I get slightly better results on that front :
@@ -164,7 +167,7 @@ And it appears to works, at least in scope of my limited tested environment test
 However, with this loss, one need to be careful to not let it saturate as it seems it easily happen. To avoid that batch should be composed of aproximatelly same ratio of images of different labels, and similarity should be measured in between same labels only. If labels are not available then mean over all sampes shoud do the job. To be noted, with my experiments i have [GP penalty](https://arxiv.org/abs/1704.00028), or rather its variant [DRAGAN](https://arxiv.org/abs/1705.07215), on by default..
 
 ## Artifacts in code and tries
- - at first I misunderstood exploration strategy for GANs, in fact I was thinking it have none.. and so I added option to have multiple generators with [Noisy Networks](https://arxiv.org/abs/1706.10295) heads as exploration method (check my [rewheeler project](https://rezer0dai.github.io/rewheeler)). On the other hand, later I realized that z-noise vector do exactly that job of exploration! Well at least in standard GAN, no actually in CycleGAN alike approaches where it I maybe worth to experiment with, so i left it implemented in my code
+ - at first I misunderstood exploration strategy for GANs, in fact I was thinking it have none.. and so I added option to have multiple generators with [Noisy Networks](https://arxiv.org/abs/1706.10295) heads as exploration method (check my [rewheeler project](https://rezer0dai.github.io/rewheeler)). On the other hand, later I realized that z-noise vector do exactly that job of exploration! Well at least in standard GAN, no actually in CycleGAN alike approaches where it is maybe worth to experiment with, so i left it implemented in my code
  - While training with z-noise vector, for me sounds interesting to train same z-noise batch with several different real batches. Where intuition follows, that during training i dont want to fit random noise to particular real batch distribution as i dont know if that is optimal match, but instead i want to train same noise with few different real batches, before i move to next random z-noise vector.  
  - as idea of training critic more often than generator sounds really interesting to me, i opt-in to framework. On the other side i allows critic to have smaller batches than generator for trainig but not the other way around, wich may be interesting to experiment with as well
  - follows from my rewheeler poject, i left code in framework to experiment with having multiple citics too
