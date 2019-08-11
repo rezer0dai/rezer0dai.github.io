@@ -43,9 +43,9 @@ Those papers were influential, for me, in a way, that it draws me back from view
 
 ## InfoGAN is all you need
 There I moved to another nice paper called **Information Maximizing Generative Adversarial Nets (InfoGAN)**, which is breakthrough, at last for me, as it shows how to train classification, and generator as well, network in basically **unsupervised** manner via GANs. Details I encourage you to read in paper, but basic idea is to introduce labels to generator's input and critic's output and backprop it trough binary cross entropy. You can correct labels to correspond with our perception ( like in MNIST 10 labels, where you can force label 0 to relate to digit 0 ) via adding ground truth loss for labels, but in general case no need to do that, and critic will assign its own labeling (aka you can setup InfoGAN for MNIST dataset with 20, 10, or 4 labels and critic will handle it its own way, and will group images on its own labeling). 
-{:refdef: style="text-align: center;"}
-![MNIST 13 label Info-sim-GAN](https://rezer0dai.github.io/assets/images/mnist12_infog_13_a.png =300x)
-![MNIST 13 label Info-sim-GAN](https://rezer0dai.github.io/assets/images/mnist12_infog_13_b.png =300x)
+{:refdef: style="text-align: center"}
+![MNIST 13 label Info-sim-GAN](https://rezer0dai.github.io/assets/images/mnist12_infog_13_a.png){: height="300px" width="300px"}
+![MNIST 13 label Info-sim-GAN](https://rezer0dai.github.io/assets/images/mnist12_infog_13_b.png){: height="300px" width="300px"}
 {: refdef}
 As that was for me really nice research and impressive results, i continue to look for other interesting direction and capabilities of GANs. There i got trough **CycleGAN**, which showed me another possibilities  what can be done with GANs : utilize generator's loss function for specific purpose! And what they did for it was utilizing GAN framework to transfer image from one domain ( apples for example ) to another ( oranges ), as you can see :
 {:refdef: style="text-align: center;"}
