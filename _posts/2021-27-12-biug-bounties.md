@@ -10,6 +10,7 @@ tags:
 
 {% include toc %}
 
+# Hyper-V: Post#1
 
 ## intro
 This is a post I should have posted a long time ago, but I didn't because of various reasons: laziness, lack of time, greed, eating bananas, composting shits, kind of burnout, ego to make it to BH USA first (and been screwed each time with different set of Hyper-V RCEs 4 times in a row ahaha; just a reference to highlight that conferences are not the only way to go - note for myself in the future :). 
