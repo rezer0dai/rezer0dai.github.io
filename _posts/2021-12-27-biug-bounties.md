@@ -144,7 +144,7 @@ Child-SP          RetAddr           Call Site
 ```
   - note : we are about here to call from operator : ```vp9fs!<lambda_1cce8f953904a6d717908b4c35b3a59d>$_ResumeCoro$2::operator()```
   
-  - but magic c++ and throwing exceptions and we got stack like this :
+  - pay attention that callstack is quite deep to actually reach the Remove function, but here it comes magic of c++ and throwing exceptions before reaching Remove, and vioala we got stack like this :
   
 ```
 FLUSH_ENTRYYY
