@@ -25,7 +25,7 @@ I will try to be brief cuz it is not rocket science, so without further ado let'
   - vmusrv.dll : responsible for efficient sharing files host-guest
   - Is there { cancel / flush / remove / other early drop of packet } logic in your target? If you haven't fuzzed those yet then you should: it usually is bull's eye without question.
   
-```C
+```
 long Smb2ExecuteCancel(_SRV_WORK_ITEM *param_1)
 {  
   SrvCancelWorkItem((_SRV_WORK_ITEM *)piVar2,2); // here can deref UAF too
@@ -41,7 +41,7 @@ long Smb2ExecuteCancel(_SRV_WORK_ITEM *param_1)
 ```
   - takes me longer time to dig this one out because I miss the sync/async flag of additional **cancel** packet functionality in documentation, and here we have
 
-```C
+```
 long Smb2ValidateCancel(_SRV_WORK_ITEM param_1) 
 {
 …
@@ -81,6 +81,7 @@ vmusrv!SrvFreeWorkItem+0x1bc:
     
   
   > vsmb, older bug, bonus:
+  
       - open vsmb file
       - get a predictable file handle
       - bug: race open + close with predictable handle
@@ -190,7 +191,7 @@ vp9fs!p9fs::Handler::HandleFlush$_ResumeCoro$2+0x48c:
   - vmwp.exe : main process per VM, loading dlls like vmusrv.dll or vp9fs.dll, driver communication like vid, vmswitch, .. 
   - check this, hint ~ refcounting: 
   
-```C
+```
 void __thiscall Teardown(VirtualMachine * this)
 
 1400513bd:
@@ -234,7 +235,7 @@ void __thiscall Teardown(VirtualMachine * this)
 ```
   - and this, hint ~ locking: 
   
-```C
+```
 HandleVndCallback(VndCompletionHandler *this,void *param_1,_VID_MSG_DATA *param_2, _VID_MSG_RETURN_DATA *param_3)
 140149ee2:
           if (uVar10 != 0x1000010) {
@@ -302,7 +303,7 @@ vmwp!Vml::VmSharableObject::DecrementUserCount+0x59:
     + example how to make Race Conditions better demonstrate for repro
     + second part of poc is turn on+off VM
     
-```C
+```
 .childdbg 1 
 g 
 
