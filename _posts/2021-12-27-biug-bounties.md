@@ -19,9 +19,9 @@ In a series of blogpost that I am writing, I aim to look at RCE bugs that are in
 
 I will try to be brief cuz it is not rocket science, so without further ado let's dig in.
 
-## bugzzz
+## bugzzz ( fyi all bugs discussed here are fixed )
 
-### vsmb - nice bugs : fuzzing is cool
+### vsmb - nice bugs : fuzzing is cool [CVE-2020-17095]
   - vmusrv.dll : responsible for efficient sharing files host-guest
   - Is there { cancel / flush / remove / other early drop of packet } logic in your target? If you haven't fuzzed those yet then you should: it usually is bull's eye without question.
   
@@ -88,7 +88,7 @@ vmusrv!SrvFreeWorkItem+0x1bc:
       - cve: forgotten.. around 2018
       - how I fuzzed it: understanding of target (predictable handle + that packet is tied to file handles) and adding quirks to fuzzing (prediction of the handle before its creation, dangling handles), not especially focused on that logic, just taking it into account (fuzzing is specific per target)
       
-### 9p - ugly one : may the force be with you
+### 9p - ugly one : may the force be with you [CVE-2021-26867]
   - vp9fs.dll : responsible for efficient sharing files host-guest
   - again remove: 
   
@@ -187,7 +187,7 @@ vp9fs!p9fs::Handler::HandleFlush$_ResumeCoro$2+0x48c:
     + tinker [linux kernel code](https://github.com/torvalds/linux/blob/master/net/9p/trans_fd.c) to allow sending packets from your fuzzer
     + or again, load and fuzz standalone
 
-### vmwp - well, what is fuzzing anyway
+### vmwp - well, what is fuzzing anyway [CVE-2021-28314]
   - vmwp.exe : main process per VM, loading dlls like vmusrv.dll or vp9fs.dll, driver communication like vid, vmswitch, .. 
   - check this, hint ~ refcounting: 
   
