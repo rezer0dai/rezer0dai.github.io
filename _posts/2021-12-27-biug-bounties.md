@@ -351,14 +351,14 @@ In this post I covered the first bugs after a 2 year long gap I took, meanwhile 
 However, about 3 of my recent bugs were marked out of scope, and so the next part of this post will be focused on that. Will be less technical and less brief, as I will try to share my point of view to recent **Hyper-V Bounty** confusions, to prevent the frustration of security researchers, such as myself, from cooling joy by "big" to "bug" bounty assessment.     
 
 As a side note, I got also some ideas for future research and my fuzzing approaches, so stay tuned, I may or may not drop something soon. Meanwhile, those are nice drops, which may inspire you too: 
-  - https://github.com/RUB-SysSec/nyx-net
-  - https://www.microsoft.com/en-us/research/publication/hyperfuzzer-an-efficient-hybrid-fuzzer-for-virtual-cpus/
-  - https://github.com/0vercl0k/wtf
-  - https://googleprojectzero.blogspot.com/2021/09/fuzzing-closed-source-javascript.html?m=1
-  - https://ieeexplore.ieee.org/document/9152719
-  - https://twitter.com/SarahJamieLewis/status/1462190704751374337
-  - https://github.com/nautilus-fuzz/nautilus
-  - https://www.computer.org/csdl/journal/ts/5555/01/09583875/1xSHTQhhdv2
+  - [Hacking state fuzzing](https://github.com/RUB-SysSec/nyx-net)
+  - [Fuzzing Environment too](https://www.microsoft.com/en-us/research/publication/hyperfuzzer-an-efficient-hybrid-fuzzer-for-virtual-cpus/)
+  - [Snapshot fuzzing from DUMP~State!](https://github.com/0vercl0k/wtf)
+  - [when you can’t beat them, join them](https://googleprojectzero.blogspot.com/2021/09/fuzzing-closed-source-javascript.html?m=1)
+  - [IJON hacks](https://ieeexplore.ieee.org/document/9152719)
+  - [Super Mario data centric fuzzing](https://twitter.com/SarahJamieLewis/status/1462190704751374337)
+  - [Nautilus - grammar](https://github.com/nautilus-fuzz/nautilus)
+  - [UAF](https://www.computer.org/csdl/journal/ts/5555/01/09583875/1xSHTQhhdv2)
 
 
 Btw. In my next blog post, I plan to cover more about what I consider what fuzzing is, especially towards targets like Hyper-V where conventional fuzzing seems not so effective and how do I approach it. 
