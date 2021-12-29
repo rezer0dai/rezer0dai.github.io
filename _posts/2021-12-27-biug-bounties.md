@@ -22,7 +22,7 @@ I will try to be brief cuz it is not rocket science, so without further ado let'
 ## bugzzz ( fyi all bugs discussed here are fixed )
 
 ### vsmb - nice bugs : fuzzing is cool [CVE-2020-17095]
-  - vmusrv.dll : responsible for efficient sharing files host-guest
+  - vmusrv.dll : responsible for efficient sharing files host-guest, windows based containers
   - Is there { cancel / flush / remove / other early drop of packet } logic in your target? If you haven't fuzzed those yet then you should: it usually is bull's eye without question.
   
 ```
@@ -89,7 +89,7 @@ vmusrv!SrvFreeWorkItem+0x1bc:
       - how I fuzzed it: understanding of target (predictable handle + that packet is tied to file handles) and adding quirks to fuzzing (prediction of the handle before its creation, dangling handles), not especially focused on that logic, just taking it into account (fuzzing is specific per target)
       
 ### 9p - ugly one : may the force be with you [CVE-2021-26867]
-  - vp9fs.dll : responsible for efficient sharing files host-guest
+  - vp9fs.dll : responsible for efficient sharing files host-guest, linux based containers
   - again remove: 
   
 ```
@@ -351,17 +351,22 @@ In this post I covered the first bugs after a 2 year long gap I took, meanwhile 
 However, about 3 of my recent bugs were marked out of scope, and so the next part of this post will be focused on that. Will be less technical and less brief, as I will try to share my point of view to recent **Hyper-V Bounty** confusions, to prevent the frustration of security researchers, such as myself, from cooling joy by "big" to "bug" bounty assessment.     
 
 As a side note, I got also some ideas for future research and my fuzzing approaches, so stay tuned, I may or may not drop something soon. Meanwhile, those are nice drops, which may inspire you too: 
-  - [Hacking state fuzzing](https://github.com/RUB-SysSec/nyx-net)
   - [Fuzzing Environment too](https://www.microsoft.com/en-us/research/publication/hyperfuzzer-an-efficient-hybrid-fuzzer-for-virtual-cpus/)
-  - [Snapshot fuzzing from DUMP~State!](https://github.com/0vercl0k/wtf)
-  - [when you can’t beat them, join them](https://googleprojectzero.blogspot.com/2021/09/fuzzing-closed-source-javascript.html?m=1)
   - [IJON hacks](https://ieeexplore.ieee.org/document/9152719)
+  - [Snapshot fuzzing from DUMP~State!](https://github.com/0vercl0k/wtf)
+  - [Hacking state fuzzing](https://github.com/RUB-SysSec/nyx-net)
+  - [when you can’t beat them, join them](https://googleprojectzero.blogspot.com/2021/09/fuzzing-closed-source-javascript.html?m=1)
   - [Super Mario data centric fuzzing](https://twitter.com/SarahJamieLewis/status/1462190704751374337)
   - [Nautilus - grammar](https://github.com/nautilus-fuzz/nautilus)
   - [UAF](https://www.computer.org/csdl/journal/ts/5555/01/09583875/1xSHTQhhdv2)
 
 
-Btw. In my next blog post, I plan to cover more about what I consider what fuzzing is, especially towards targets like Hyper-V where conventional fuzzing seems not so effective and how do I approach it. 
+I should probably put a note for a reader, that it is not necessarily his technical skill that is lacking while comprehending my technical description of bugs, but rather my interpretation was not straightforward to digest. I guess, I could write it with empathy to basics and background from the very beginning, however that would be a lot of additional work for my lazy self, and actually, it would be also counterproductive in my point of view. 
+
+I intend for a reader to work with this post as a reference and more of a highlight of my way of research. That means reading the post, getting a general idea but having open questions, answering those questions by reversing targeted area ( vmusrv, vp9fs, vmwp ) - either by targeted functionality understanding in general or by patch diffing particular CVEs - to get a better understanding, and get back to post to crack what and why I did and what I possibly omit and fail to see. Maybe looping somewhere in the process. If struggling with triggering host code by your packet, I may help with that in the next post.  
+
+I don't recommend re-invent this wheel 'of mine' ( tbh I very rarely - read: close to never - repro others bugz, cuz I don't see a point - until I am working on a technology ), but rather to improve it, utilize it, or avoid the wheel and come with something I did not comprehend in my box. 
+
 
 ## SetBacks : See you space Cowboy
 
