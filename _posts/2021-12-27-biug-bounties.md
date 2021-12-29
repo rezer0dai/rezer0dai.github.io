@@ -361,11 +361,11 @@ As a side note, I got also some ideas for future research and my fuzzing approac
   - [UAF](https://www.computer.org/csdl/journal/ts/5555/01/09583875/1xSHTQhhdv2)
 
 
-I should probably put a note for a reader, that it is not necessarily his technical skill that is lacking while comprehending my technical description of bugs, but rather my interpretation was not straightforward to digest. I guess, I could write it with empathy to basics and background from the very beginning, however that would be a lot of additional work for my lazy self, and actually, it would be also counterproductive in my point of view. 
+I should probably put a note for a reader, that it is not necessarily her/his/its technical skill that is lacking while comprehending my technical description of bugs, but rather my interpretation was not straightforward to digest. I guess, I could write it with empathy to basics and background from the very beginning, however that would be a lot of additional work for my lazy self, and actually, it would be also counterproductive in my point of view. 
 
 I intend for a reader to work with this post as a reference and more of a highlight of my way of research. That means reading the post, getting a general idea but having open questions, answering those questions by reversing targeted area ( vmusrv, vp9fs, vmwp ) - either by targeted functionality understanding in general or by patch diffing particular CVEs - to get a better understanding, and get back to post to crack what and why I did and what I possibly omit and fail to see. Maybe looping somewhere in the process. If struggling with triggering host code by your packet, I may help with that in the next post.  
 
-I don't recommend re-invent this wheel 'of mine' ( tbh I very rarely - read: close to never - repro others bugz, cuz I don't see a point - until I am working on a technology ), but rather to improve it, utilize it, or avoid the wheel and come with something I did not comprehend in my box. 
+I don't recommend re-invent this wheel 'of mine' ( tbh I very rarely - read: close to never - repro others bugz, cuz I don't see a point - until I am working on a technology ), but rather to use info, go beyond, or avoid the wheel and come with something I did not comprehend in my box. 
 
 
 ## SetBacks : See you space Cowboy
