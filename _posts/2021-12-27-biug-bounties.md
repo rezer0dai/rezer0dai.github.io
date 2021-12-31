@@ -1,6 +1,6 @@
 ---
 use_math: true
-title: "Biug Bounties and HyperV RCE Research"
+title: "Bi/ug Bounties and HyperV RCE Research"
 tags:
   - fuzzing
   - bug
@@ -15,24 +15,24 @@ tags:
 ## intro
 This is a post I should have posted a long time ago, but I didn't because of various reasons: laziness, lack of time, greed, eating bananas, composting shits, kind of burnout, ego to make it to BH USA first (and been screwed each time with different set of Hyper-V RCEs 4 times in a row ahaha; just a reference to highlight that conferences are not the only way to go - note for myself in the future :). 
 
-In a series of blogpost that I am writing, I aim to look at RCE bugs that are in scope for [MSFT Hyper-Vbounty](https://www.microsoft.com/en-us/msrc/bounty-hyper-v) to study the state of Hyper-V Vulnerability research: state of code, type of bugs, complexity of reaching or detecting them, my 5cents regarding recent confusion about what is in scope and why, and finally some examples for setbacks of big bounties. For the next posts, I plan on discussing how to setup effective Hyper-V fuzzing and research environment, the type of fuzzers and automation, and as a bonus pinpointing targets that are not so obvious, and areas that I did not cover properly yet. Posts may or may not contain easter eggs, happy hunting!
+In a series of blogpost that I am writing, I aim to look at RCE bugs that are in scope for [MSFT Hyper-V Bounty Program](https://www.microsoft.com/en-us/msrc/bounty-hyper-v) to study the state of Hyper-V Vulnerability research: state of code, type of bugs, complexity of reaching or detecting them, my 5cents regarding recent confusion about what is in scope and why, and finally some examples for setbacks of big bounties. For the next posts, I plan on discussing how to setup effective Hyper-V fuzzing and research environment, the type of fuzzers and automation, and as a bonus pinpointing targets that are not so obvious, and areas that I did not cover properly yet. Posts may or may not contain easter eggs, happy hunting!
 
 I will try to be brief cuz it is not rocket science, so without further ado let's dig in.
 
 ## bugzzz ( fyi all bugs discussed here are fixed )
 
 ### vsmb - nice bugs : fuzzing is cool [CVE-2020-17095]
-  - vmusrv.dll : responsible for efficient sharing files host-guest, windows based containers
+  - vmusrv.dll : responsible for efficient sharing files host to guest, windows based containers
   - Is there { cancel / flush / remove / other early drop of packet } logic in your target? If you haven't fuzzed those yet then you should: it usually is bull's eye without question.
   
-```
+```c
 long Smb2ExecuteCancel(_SRV_WORK_ITEM *param_1)
 {  
   SrvCancelWorkItem((_SRV_WORK_ITEM *)piVar2,2); // here can deref UAF too
 
   LOCK();
   iVar1 = *piVar2;
-  *piVar2 = *piVar2 + -1; //refcounter
+  *piVar2 = *piVar2 + -1; // refcounter
 
   if (iVar1 == 1) { // boom
     SrvFreeWorkItem((_SRV_WORK_ITEM *)piVar2);
@@ -67,9 +67,9 @@ void * __thiscall Lookup(RfsTable *this,uint param_1)
   return pvVar1; // we return plain ptr in async manner
 }
 ```
-  - I found it while analyzing code coverage
-  - The root cause: you can race ChangeNotify + async Cancel packets, ChangeNotify will try to delete object as the refcount of its work item drops to 0, but cancel can race this process while work_item is still found in LookupList. Thus later execution of cancel packet ( as async flag was done, first phase was just by validation of cancel packet and looking up - refcounting from 0 back to 1 ), will deref free-ed work_item. At first sight, it all seemed good, refcounting in place, locking too.. Though strange logic of removing an object from a list from objects own destructor. Also interesting we can acquire object which have refcount == 0 once it already acquired refcount >= 1
-  - How I fuzzed it: adding a particular flag to cancel packet, and let automation do its job in 5mins hit.. and to be honest looked at that logic with my eyes before triggering it by fuzzer and ... I did not find it:
+  - I found it while analyzing code coverage reports, spoting uncovered interesting code blocks
+  - The root cause: you can race ```ChangeNotify``` + async ```Cancel``` packets, ChangeNotify will try to delete object as the refcount of its work item drops to 0, but ```cancel``` can race this process while work_item is still found in LookupList. Thus later execution of ```cancel``` packet ( as async flag was done, first phase was just by validation of ```cancel``` packet and looking up - refcounting from 0 back to 1 ), will deref free-ed work_item. At first sight, it all seemed good, refcounting in place, locking too.. Though strange logic of removing an object from a list from the object's own destructor. Also interesting we can acquire object which have refcount == 0 once it already acquired refcount >= 1
+  - How I fuzzed it: adding a particular flag to ```cancel``` packet, and let automation do its job in 5mins hit.. and to be honest looked at that logic with my eyes before triggering it by fuzzer and ... I did not find it:
  
 ```
 vmusrv!SrvFreeWorkItem+0x1bc:
@@ -89,8 +89,8 @@ vmusrv!SrvFreeWorkItem+0x1bc:
       - how I fuzzed it: understanding of target (predictable handle + that packet is tied to file handles) and adding quirks to fuzzing (prediction of the handle before its creation, dangling handles), not especially focused on that logic, just taking it into account (fuzzing is specific per target)
       
 ### 9p - ugly one : may the force be with you [CVE-2021-26867]
-  - vp9fs.dll : responsible for efficient sharing files host-guest, linux based containers
-  - again remove: 
+  - vp9fs.dll : responsible for efficient sharing files host to guest, linux based containers
+  - again ```Remove```: 
   
 ```
 void operator()( param_1)
@@ -102,7 +102,7 @@ void operator()( param_1)
 
     ~((longlong)(param_1 + 0xb0)); // Free RequestInfo*
 ```
-  - well this looks especially solid, also order remove + delete looks good. but problem is that remove actually to happen, callstack must look like this 
+  - well this looks especially solid, also order remove + delete looks good. but problem is that ```Remove``` actually to happen/trigger, callstack must look like this 
   
 ```
 FLUSH_ENTRYYY
@@ -144,7 +144,7 @@ Child-SP          RetAddr           Call Site
 ```
   - note : we are about here to call from operator : ```vp9fs!<lambda_1cce8f953904a6d717908b4c35b3a59d>$_ResumeCoro$2::operator()```
   
-  - pay attention that callstack is quite deep to actually reach the Remove function, but here it comes magic of c++ and throwing exceptions before reaching Remove, and vioala we got stack like this :
+  - pay attention that callstack is quite deep to actually reach the ```Remove``` function, but here it comes the magic of C++ and throwing exceptions before reaching ```Remove```, and vioala we got stack like this :
   
 ```
 FLUSH_ENTRYYY
@@ -174,14 +174,14 @@ Child-SP          RetAddr           Call Site
 
   - aka, we bubble out from exception (overload of packets) without removing struct from list, but deleting it anyway, ouch ...
   
-  - root cause: when exception unwinding happens, it is forgotten to handle proper removing object from list but free is done correctly :)
+  - root cause: when exception unwinding happens, it is forgotten to handle proper removal of the object from the list but at the same time `free` is done correctly :)
   
 ```
 vp9fs!p9fs::Handler::HandleFlush$_ResumeCoro$2+0x48c:
 00007ff8e2df033c 0fb74918        movzx   ecx,word ptr [rcx+18h] ds:000002542129dff8=????
 ```
   
-  - how fuzzed it: when doing code coverage you are restricted to a few dozens of calls due to reproducibility, also you want to have as many calls enabled (open, close, flush, cancel, write, seek, attr, etc.). But sometimes brute force and extreme cases do their job, yeah you can call it dummy fuzzing shame on me :( aka total call limit I raised to several thousands, and doing filtering of calls (an only subset of calls will be called per run), moreover sometimes you want to run several fuzzers at once for one target (though not necessarily in this case) , dummy dummy yammy yammy
+  - how I fuzzed it: when doing code coverage you are restricted to a few dozens of calls due to reproducibility, also you want to have as many calls enabled (open, close, flush, cancel, write, seek, attr, etc.). But sometimes brute force and extreme cases do their job, yeah you can call it dummy fuzzing shame on me :( aka total call limit I raised to several thousands, and doing filtering of calls (an only subset of calls will be called per run), moreover sometimes you want to run several fuzzers at once for one target (however not necessarily in this case), dummy dummy yammy yammy
 
   - How to reach to fuzz : 
     + tinker [linux kernel code](https://github.com/torvalds/linux/blob/master/net/9p/trans_fd.c) to allow sending packets from your fuzzer
@@ -288,16 +288,16 @@ void __thiscall UnprepareSelf(VND_HANDLER_CONTEXT *this)
 000000e2`82eff800 00007fff`cdfbcec1 kernel32!BaseThreadInitThunk+0x14
 000000e2`82eff830 00000000`00000000 ntdll!RtlUserThreadStart+0x21
 ```
-  - The root cause: Read Only State is a beautiful concept i once aspire to. But it can have dangers once your design is not ready for it, aka in this case developer can see read-only access at HandleCallback and skip to do any lock at all, but in the background there is **refcounting**. At least that was my interpretation. So it may not be obvious for a developer to include write lock here. But.. refcounting can race too :)
+  - The root cause: Read Only State is a beautiful concept I aspire to. But it can have dangers once your design is not ready for it, aka in this case developer can see read-only access at HandleCallback and skip to do any lock at all, but in the background there is **refcounting**. At least that was my interpretation. So it may not be obvious for a developer to include write lock here. But.. refcounting can race too :)
 ```
 vmwp!Vml::VmSharableObject::DecrementUserCount+0x59:
 00007ff7`88312d5d 488b07          mov     rax,qword ptr [rdi] ds:00000210`a424bfb0=????????????????
 ```
-  - How did I fuzzed it: automation .. essentially can be seen as a by-product while fuzzing at scale. Well.. what I realized fuzzing is, and why automation is an essential part of your fuzzing efforts, not only as automation, will be in the scope of the next post. Meanwhile to sum it up, lucky me :)
+  - How I fuzzed it: automation .. essentially can be seen as a by-product while fuzzing at scale. Well.. what I realized fuzzing is, and why automation is an essential part of your fuzzing efforts, not only as automation, will be in the scope of the next post. Meanwhile to sum it up, lucky me :)
 
   - How to reach to fuzz : 
     + [Hyper-V Cmdlets](https://docs.microsoft.com/en-us/powershell/module/hyper-v/?view=windowsserver2022-ps) yep that is right, Azure attack is not Pwn2Own attack, and for example turn on/off is something that attacker can do
-    + though this is always on the edge, about turn off bugs for example check [February 23, 2021 Revision](https://www.microsoft.com/en-us/msrc/bounty-hyper-v)
+    + though this is always on the edge, about turn off bugs for example check [February 23, 2021 Revision - bottom of the page](https://www.microsoft.com/en-us/msrc/bounty-hyper-v)
     
   - POC
     + example how to make Race Conditions better demonstrate for repro
@@ -327,22 +327,24 @@ g
 ```
     
 
-### *Few highlights to note :*
-> all of them RCE + UAF, to be honest most of my bugs are races due to the nature of my fuzzing, but Hyper-V is not an eve's garden for data format bugs anyway.
+### Few highlights to note :
+>>>
+all of them RCE + UAF, to be honest most of my bugs are races due to the nature of my fuzzing, but Hyper-V is not an eve's garden for data format bugs anyway.
 
-> bugs were not at fuzzing obvious target logic (files) path, but at the upper level (work items / packet handling)
+bugs were not at fuzzing obvious target logic (files) path, but at the upper level (work items / packet handling)
 
-> for those bugs using code coverage-based fuzzer can shoot you in your feet at very least. On the other side, as I mentioned above, code coverage can play an essential role if used appropriately (hinting at weak points of fuzzer instead of main logic of fuzzer)
+for those bugs using code coverage-based fuzzer can shoot you in your feet at the very least. On the other side, as I mentioned above, code coverage can play an essential role if used appropriately (hinting at weak points of fuzzer instead of main logic of fuzzer)
 
-> Hyper-V is hard (?). all mentioned bugs, have some hidden quirk to reach, is not an obvious mistake by developer - quite opposite - code looks solid and well thought over, but you need magic eyes to catch those by analysis as a bug hunter, though fuzzing may change the game
+Hyper-V is hard (?). All mentioned bugs, have some hidden quirk to reach, is not an obvious mistake by developer - quite opposite - code looks solid and well thought over, but you need magic eyes to catch those by analysis as a bug hunter, and fuzzing may change the game
 
-> very similar (cancel or Vnd+TearDown) but different in nature (more fuzzy approach vs more static approach by my understanding) examples you can find by really cool resource [Mobius Band](https://i.blackhat.com/USA21/Wednesday-Handouts/us-21-Mobius-Band-Explore-Hyper-V-Attack-Interface-Through-Vulnerabilities-Internals.pdf)
+very similar (cancel or Vnd+TearDown) but different in nature (more fuzzy approach vs more static approach by my understanding) examples you can find by really cool resource [Mobius Band](https://i.blackhat.com/USA21/Wednesday-Handouts/us-21-Mobius-Band-Explore-Hyper-V-Attack-Interface-Through-Vulnerabilities-Internals.pdf)
 
-> low hanging fruits is a luxury term, it always depends. After retrospective, we may call perhaps all memory corruption bugs low hanging fruits :) what can help you finding yours LHF is persistence, accumulated experience, luck and opportunity (time). 
+low hanging fruits is a luxury term, it always depends. After retrospective, we may call perhaps all memory corruption bugs low hanging fruits :) what can help you finding yours LHF is persistence, accumulated experience, luck and opportunity (time). 
+>>>
 
 ## Teaser : Research on the Rise
 
-In this post I covered the first bugs after a 2 year long gap I took, meanwhile I did some deep research, lol, on reinforcement learning (RL) which was a very nice refresh, and got some good knowledge that I may or may not use in my future research.  And afterward I have taken, yet again, several months off, to finish my knowledge pursue for RL and mastering of Slavic life (making own fruit booze, planting trees, eating more bananas, constructing some building which should last a year or two before collapses cuz wind rain or so, well trying new stuff :). But a few months ago I got kicked off from my ofsec slumber by mentioned Mobius Band, to remind me that I should repay my debt and do some sharing myself too. There I am again, me + Hyper-V + fresh ideas, which reflects to about 10 Tier-1 bugs I reported recently, including RCEs, Memory reads, and DoSes, new attack surface - but also traditional one. In contrast highlighted bugs were focused on containers part of Hyper-V bounty, Tier-2.
+In this post I covered the first bugs after a 2 year long gap I took, meanwhile I did some deep research, lol, on reinforcement learning (RL) which was a very nice refresh, and got some good knowledge that I may or may not use in my future vulnerability research.  And afterward I have taken, yet again, several months off, to finish my knowledge pursue for RL and mastering of Slavic life (making own fruit booze, planting trees, eating more bananas, constructing some building which should last a year or two before collapses cuz wind rain or so, well trying new stuff :). But a few months ago I got kicked off from my ofsec slumber by mentioned Mobius Band, to remind me that I should repay my debt and do some sharing myself too. There I am again, me + Hyper-V + fresh ideas, which reflects to about 10 Tier-1 bugs I reported recently, including RCEs, Memory reads, and DoSes, new attack surface - but also traditional one. In contrast highlighted bugs were focused on containers part of Hyper-V bounty, Tier-2.
 
 {:refdef: style="text-align: center;"}
 ![oo(p)s](https://rezer0dai.github.io/assets/images/bounty_oops.png)
@@ -361,9 +363,9 @@ As a side note, I got also some ideas for future research and my fuzzing approac
   - [UAF](https://www.computer.org/csdl/journal/ts/5555/01/09583875/1xSHTQhhdv2)
 
 
-I should probably put a note for a reader, that it is not necessarily her/his/its technical skill that is lacking while comprehending my technical description of bugs, but rather my interpretation was not straightforward to digest. I guess, I could write it with empathy to basics and background from the very beginning, however that would be a lot of additional work for my lazy self, and actually, it would be also counterproductive in my point of view. 
+I should probably put a note for the reader, that it is not necessarily their technical skill that is lacking while comprehending my technical description of bugs, but rather my interpretation was not straightforward to digest. I guess, I could write it with empathy to basics and background from the very beginning, however that would be a lot of additional work for my lazy self, and actually, it would be also counterproductive in my point of view. 
 
-I intend for a reader to work with this post as a reference and more of a highlight of my way of research. That means reading the post, getting a general idea but having open questions, answering those questions by reversing targeted area ( vmusrv, vp9fs, vmwp ) - either by targeted functionality understanding in general or by patch diffing particular CVEs - to get a better understanding, and get back to post to crack what and why I did and what I possibly omit and fail to see. Maybe looping somewhere in the process. If struggling with triggering host code by your packet, I may help with that in the next post.  
+I intend for the reader to work with this post as a reference and more of a highlight of my way of research. That means reading the post, getting a general idea but having open questions, answering those questions by reversing targeted area ( vmusrv, vp9fs, vmwp ) - either by targeted functionality understanding in general or by patch diffing particular CVEs - to get a better understanding, and get back to post to crack what and why I did and what I possibly omit and fail to see. Maybe looping somewhere in the process. If struggling with triggering host code by your packet, I may help with that in the next post.  
 
 I don't recommend re-invent this wheel 'of mine' ( tbh I very rarely - read: close to never - repro others bugz, cuz I don't see a point - until I am working on a technology ), but rather to use info, go beyond, or avoid the wheel and come with something I did not comprehend in my box. 
 
@@ -375,7 +377,7 @@ As a first step, I will describe my "setbacks" with big bounties i had so far, p
 - NetBios: CVE-2017-0161 quite joy to blue-screen host from VM for the first time. Got 0k or 5k I think :) That time I am not even sure I submitted it for money. Damn, that time I didn't care about bounties, just CVE and good feeling was enough, as that was a really cool bug for me!
 
 
-- SMB2 triggerable: CVE-2020-17096 aaaa man, quite a disappointment, after 2years I am back, and moreover with promising 100k target. Got Post-Auth SMB2 but with unsigned packets! meaning? MitM attack after user auth as easy to tamper with unsigned packets.. got 5k, and dumped this research ahaha right afterward, what a depressing moment, you know I was hoping for 100k and glory :) what a change of attitude from NetBios one right? but in my defense, was complicated to setup fuzzing for SMB2 with that signing, key, handshake, etc, a lot of work I made, ouch .. but I somehow get it, MitM was not something MSFT is looking for. Also that I trigger it through SMB does not necessarily mean it is SMB bug.
+- SMB2 triggerable: CVE-2020-17096 aaaa man, quite a disappointment, after 2years I am back, and moreover with promising 100k target. Got Post-Auth SMB2 but with unsigned packets! Impact? MitM attack after user auth as easy to tamper with unsigned packets.. got 5k, and dumped this research ahaha right afterward, what a depressing moment, you know I was hoping for 100k and glory :) what a change of attitude from NetBios one right? but in my defense, it was complicated to setup fuzzing for SMB2 with that signing, key, handshake, etc, a lot of work I made, ouch .. but I somehow get it, MitM was not something MSFT is looking for. Also that I trigger it through SMB does not necessarily mean it is SMB bug.
 
 
 - Vid.sys CVE-2017-8664 my first Hyper-V Tier-1 RCE **EVER** !! The price tag that time was 50k, a few months later I think 150. Heart Bleeding! Also, I reported 2 bugs for that component, one found via automation and spend 2 months of debugging (getting hints and proving a theory, was one of the most coolest bug of mine tbh), and for the second one, I made fuzzer and trigger brother bug, but was coalesced to one CVE as one patch. Were it be two bugs if I reported in a different order or wait? Tbh I asked and they said no, their patch will get both regardless of which I reported first. But still 2 bugs vs 1 CVE, bleeding :( but I'm really proud of this one, and fuzzing was cool too! 
@@ -390,7 +392,7 @@ As a first step, I will describe my "setbacks" with big bounties i had so far, p
 - Turn Off Hyper-V vulns, one was for s3video, the second was mentioned as last of three highlighted at this post CVE-2021-28314. considered to be Tier-3 aka 10x lower bounty - until proven exploitability, as in general unsure if exploitable :( Actually, I agree on that one, at least for Tier-2, for Tier-1 seems less challenging to make working exploit-poc, but that I will play with once I got that kind of bug :)
 
 
-What can be learned from this? I guess first most obvious is that my greed grows exponentially :) Secondly, the bounty program, at least MSFT one, evolves over time. Third, as it may seem sometimes unfair, based on your results can be set new standards which will benefit to others but will not be backported to your past cases (Note that I am attributing to myself here too much, that is imho my normal habit, while actually, I bet it was a coincidence and "unfortunate" timing from my side at least at most mentioned cases), and that is part of the game too.
+What can be learned from this? I guess first most obvious is that my greed grows exponentially :) Secondly, the bounty program, at least the MSFT one, evolves over time. Third, as it may seem sometimes unfair, based on your results can be set new standards which will benefit to others but will not be backported to your past cases (Note that I am attributing to myself here too much, that is imho my normal habit, while actually, I bet it was a coincidence and "unfortunate" timing from my side at least at most mentioned cases), and that is part of the game too.
 
 ## Out of Scope : Oo(p)S
 
@@ -410,17 +412,17 @@ On the other side, I agree there should be some gray zone, like not all Windows 
 But as far as I understand for Hyper-V bounty, Microsoft is concerned on quite a minimalistic approach - thus so high bounties, less code less place for mistakes. And what they can essentially serve on the cloud for users that way. That means, no enhanced session, no remote fx, no wsl2. Smb, NetBios, Ntfs, core ALPC, all not a Hyper-V design. Just old plain default modules, default settings. And in that regard, *million dollar question is: what is triggerable in default cloud settings ? What about docker / kubernetes ?*
 
 
-Tbh I am not sure about the full scope of the attack surface myself, I am feeling a lack of documentation on this. Like what kind of settings can we alter, what an attacker actually can do outside of a VM. But how easy it is to provide security researchers with this kind of playground, I honestly don't know. Therefore best thing we could do, is in case of uncertainty about attack surface, to ask them through the [email](mailto:secure@microsoft.com), maybe some arguments if their explanation is not clear enough or we think they don't see what we see, in general finding common ground of understanding. But meanwhile, in my next blog post, I go on to enumerate the default surface I am aware of.
+Tbh I am not sure about the full scope of the attack surface myself, I am feeling a lack of documentation on this. Like what kind of settings can we alter, what an attacker actually can do outside of a VM. But how easy it is to provide security researchers with this kind of playground, I honestly don't know. Therefore best thing we could do, is in case of uncertainty about attack surface, to ask them through the [email](mailto:secure@microsoft.com), maybe provide some arguments if their explanation is not clear enough or we think they don't see what we see, in general finding common ground of understanding. But meanwhile, in my next blog post, I go on to enumerate the default surface I am aware of.
 
 ## outro
 
-As joyful or frustrating it may be, that seems is the game of Bounty Hunter. We first need to understand that the bounty is completely in the hand of the company, if they consider bug to be worth that reward, and that they are not even obligated to do so. I think we have also grown little over ourselves in recent years. I certainly did, and I try to think in a way, that fixing my bug will not fix security itself, but sometimes I have just too big eyes my hopes were too high and my understanding and empathy towards the other side is lacking, so with this, I apologize to MSRC for the times when I do argue too hard.
+As joyful or frustrating it may be, that seems is the game of Bug Bounty Hunter. We first need to understand that the bounty is completely in the hand of the company, if they consider bug to be worth that reward, and that they are not even obligated to do so. I think we have also grown little over ourselves in recent years. I certainly did, and I try to think in a way, that fixing my bug will not fix security itself, but sometimes I have just too big eyes my hopes were too high and my understanding and empathy towards the other side is lacking, so with this, I apologize to MSRC for the times when I do argue too hard.
 
 I understand that there are more options, not just vendors. But on that accord, need to take into consideration that the other options require, as far as I understand, stable exploit and particular attack surface need to be in other party wanted list - basically same as with vendor, just list may differ I guess. However on top of it working on a stable exploit may be more time-consuming than finding another bug, likely more money but comes with a different responsibility / blind eye too. Also important questions like: how much money is enough? are we doing it just for money?
 
 Like it may frustrate us to find a bug and not to be appreciated for it, it is nothing and even outrageous to compare it to the 'frustration' of once living beings we casually put on our dining tables without questions.
 
-Which is, likely, the worst crime in the history of humankind towards, likely, most innocent creatures on the planet. And whatever our excuses for continuing our personal contribution to it are, there is only one thing we really need to know: [that it is completly](https://www.pcrm.org/news/health-nutrition/academy-nutrition-and-dietetics-publishes-stance-vegan-and-vegetarian-diets) [unecesary](https://pubmed.ncbi.nlm.nih.gov/27886704/). 
+Which is, likely, the worst crime in the history of humankind towards, likely, most innocent creatures on the planet. And whatever our excuses for continuing our personal contribution to it are, there is only one thing we really need to know: [that it is completly](https://www.pcrm.org/news/health-nutrition/academy-nutrition-and-dietetics-publishes-stance-vegan-and-vegetarian-diets) [unnecessary](https://pubmed.ncbi.nlm.nih.gov/27886704/). 
 
 Moreover in these days, when boosting our immunity and contributing our 5cents to preventing global health pandemic is topmost importance, we easily tend to forget the importance of our competence and keep relying only on others and temporary patches. While patching is important, mitigations are, if done right, stepping up the game.
 That being said maybe it is time to revisit the importance of fiber+vitamins(C,D,B12 among others)+minerals
