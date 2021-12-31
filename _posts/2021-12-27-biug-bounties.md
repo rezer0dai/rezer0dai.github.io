@@ -81,12 +81,12 @@ vmusrv!SrvFreeWorkItem+0x1bc:
     
   
   > vsmb, older bug, bonus:
-  
-      - open vsmb file
-      - get a predictable file handle
-      - bug: race open + close with predictable handle
-      - cve: forgotten.. around 2018
-      - how I fuzzed it: understanding of target (predictable handle + that packet is tied to file handles) and adding quirks to fuzzing (prediction of the handle before its creation, dangling handles), not especially focused on that logic, just taking it into account (fuzzing is specific per target)
+  >
+  >>    - open vsmb file
+  >>    - get a predictable file handle
+  >>    - bug: race open + close with predictable handle
+  >>    - cve: forgotten.. around 2018
+  >>    - how I fuzzed it: understanding of target (predictable handle + that packet is tied to file handles) and adding quirks to fuzzing (prediction of the handle before its creation, dangling handles), not especially focused on that logic, just taking it into account (fuzzing is specific per target)
       
 ### 9p - ugly one : may the force be with you [CVE-2021-26867]
   - vp9fs.dll : responsible for efficient sharing files host to guest, linux based containers
