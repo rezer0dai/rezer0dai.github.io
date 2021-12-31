@@ -328,7 +328,8 @@ g
     
 
 > ### Few highlights to note
-> 
+>
+>
 > all of them RCE + UAF, to be honest most of my bugs are races due to the nature of my fuzzing, but Hyper-V is not an eve's garden for data format bugs anyway.
 >
 >bugs were not at fuzzing obvious target logic (files) path, but at the upper level (work items / packet handling)
