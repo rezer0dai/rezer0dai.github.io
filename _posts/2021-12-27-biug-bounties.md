@@ -41,7 +41,7 @@ long Smb2ExecuteCancel(_SRV_WORK_ITEM *param_1)
 ```
   - takes me longer time to dig this one out because I miss the sync/async flag of additional **cancel** packet functionality in documentation, and here we have
 
-```
+```c
 long Smb2ValidateCancel(_SRV_WORK_ITEM param_1) 
 {
 …
@@ -92,7 +92,7 @@ vmusrv!SrvFreeWorkItem+0x1bc:
   - vp9fs.dll : responsible for efficient sharing files host to guest, linux based containers
   - again ```Remove```: 
   
-```
+```c
 void operator()( param_1)
     …:
     TVar2 = operator()(this); // Remove RequestInfo from LinkedList
@@ -191,7 +191,7 @@ vp9fs!p9fs::Handler::HandleFlush$_ResumeCoro$2+0x48c:
   - vmwp.exe : main process per VM, loading dlls like vmusrv.dll or vp9fs.dll, driver communication like vid, vmswitch, .. 
   - check this, hint ~ refcounting: 
   
-```
+```c
 void __thiscall Teardown(VirtualMachine * this)
 
 1400513bd:
@@ -235,7 +235,7 @@ void __thiscall Teardown(VirtualMachine * this)
 ```
   - and this, hint ~ locking: 
   
-```
+```c
 HandleVndCallback(VndCompletionHandler *this,void *param_1,_VID_MSG_DATA *param_2, _VID_MSG_RETURN_DATA *param_3)
 140149ee2:
           if (uVar10 != 0x1000010) {
@@ -328,7 +328,7 @@ g
     
 
 ### Few highlights to note :
->>>
+:::
 all of them RCE + UAF, to be honest most of my bugs are races due to the nature of my fuzzing, but Hyper-V is not an eve's garden for data format bugs anyway.
 
 bugs were not at fuzzing obvious target logic (files) path, but at the upper level (work items / packet handling)
@@ -340,7 +340,7 @@ Hyper-V is hard (?). All mentioned bugs, have some hidden quirk to reach, is not
 very similar (cancel or Vnd+TearDown) but different in nature (more fuzzy approach vs more static approach by my understanding) examples you can find by really cool resource [Mobius Band](https://i.blackhat.com/USA21/Wednesday-Handouts/us-21-Mobius-Band-Explore-Hyper-V-Attack-Interface-Through-Vulnerabilities-Internals.pdf)
 
 low hanging fruits is a luxury term, it always depends. After retrospective, we may call perhaps all memory corruption bugs low hanging fruits :) what can help you finding yours LHF is persistence, accumulated experience, luck and opportunity (time). 
->>>
+:::
 
 ## Teaser : Research on the Rise
 
