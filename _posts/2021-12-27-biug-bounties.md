@@ -39,7 +39,7 @@ long Smb2ExecuteCancel(_SRV_WORK_ITEM *param_1)
       ->  long Smb2CleanupWorkItem(_SRV_WORK_ITEM *param_1)
          ->  Remove((RfsTable ptr ptr)(p_Var5 + 0x28),(uint)uVar6,false); // unreferenced from list after item marked for deletion -> ref counter == 0
 ```
-  - takes me longer time to dig this one out because I miss the sync/async flag of additional **cancel** packet functionality in documentation, and here we have
+  - takes me longer time to dig this one out because I miss the sync/async flag of additional ```cancel``` packet functionality in documentation, and here we have
 
 ```c
 long Smb2ValidateCancel(_SRV_WORK_ITEM param_1) 
@@ -68,8 +68,8 @@ void * __thiscall Lookup(RfsTable *this,uint param_1)
 }
 ```
   - I found it while analyzing code coverage reports, spoting uncovered interesting code blocks
-  - The root cause: you can race ```ChangeNotify``` + async ```Cancel``` packets, ChangeNotify will try to delete object as the refcount of its work item drops to 0, but ```cancel``` can race this process while work_item is still found in LookupList. Thus later execution of ```cancel``` packet ( as async flag was done, first phase was just by validation of ```cancel``` packet and looking up - refcounting from 0 back to 1 ), will deref free-ed work_item. At first sight, it all seemed good, refcounting in place, locking too.. Though strange logic of removing an object from a list from the object's own destructor. Also interesting we can acquire object which have refcount == 0 once it already acquired refcount >= 1
-  - How I fuzzed it: adding a particular flag to ```cancel``` packet, and let automation do its job in 5mins hit.. and to be honest looked at that logic with my eyes before triggering it by fuzzer and ... I did not find it:
+  - The root cause: you can race ```ChangeNotify``` + async ```Cancel``` packets, ```ChangeNotify``` will try to delete object as the refcount of its work item drops to 0, but ```Cancel``` can race this process while work_item is still found in LookupList. Thus later execution of ```Cancel``` packet ( as async flag was done, first phase was just by validation of ```Cancel``` packet and looking up - refcounting from 0 back to 1 ), will deref free-ed work_item. At first sight, it all seemed good, refcounting in place, locking too.. Though strange logic of removing an object from a list from the object's own destructor. Also interesting we can acquire object which have refcount == 0 once it already acquired refcount >= 1
+  - How I fuzzed it: adding a particular flag to ```Cancel``` packet, and let automation do its job in 5mins hit.. and to be honest looked at that logic with my eyes before triggering it by fuzzer and ... I did not find it:
  
 ```
 vmusrv!SrvFreeWorkItem+0x1bc:
@@ -328,11 +328,17 @@ g
     
 
 > ### Few highlights to note
+> 
 > all of them RCE + UAF, to be honest most of my bugs are races due to the nature of my fuzzing, but Hyper-V is not an eve's garden for data format bugs anyway.
+>
 >bugs were not at fuzzing obvious target logic (files) path, but at the upper level (work items / packet handling)
+>
 >for those bugs using code coverage-based fuzzer can shoot you in your feet at the very least. On the other side, as I mentioned above, code coverage can play an essential role if used appropriately (hinting at weak points of fuzzer instead of main logic of fuzzer)
+>
 >Hyper-V is hard (?). All mentioned bugs, have some hidden quirk to reach, is not an obvious mistake by developer - quite opposite - code looks solid and well thought over, but you need magic eyes to catch those by analysis as a bug hunter, and fuzzing may change the game
+>
 >very similar (cancel or Vnd+TearDown) but different in nature (more fuzzy approach vs more static approach by my understanding) examples you can find by really cool resource [Mobius Band](https://i.blackhat.com/USA21/Wednesday-Handouts/us-21-Mobius-Band-Explore-Hyper-V-Attack-Interface-Through-Vulnerabilities-Internals.pdf)
+>
 >low hanging fruits is a luxury term, it always depends. After retrospective, we may call perhaps all memory corruption bugs low hanging fruits :) what can help you finding yours LHF is persistence, accumulated experience, luck and opportunity (time). 
 
 ## Teaser : Research on the Rise
