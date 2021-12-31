@@ -327,20 +327,13 @@ g
 ```
     
 
-### Few highlights to note :
-:::
-all of them RCE + UAF, to be honest most of my bugs are races due to the nature of my fuzzing, but Hyper-V is not an eve's garden for data format bugs anyway.
-
-bugs were not at fuzzing obvious target logic (files) path, but at the upper level (work items / packet handling)
-
-for those bugs using code coverage-based fuzzer can shoot you in your feet at the very least. On the other side, as I mentioned above, code coverage can play an essential role if used appropriately (hinting at weak points of fuzzer instead of main logic of fuzzer)
-
-Hyper-V is hard (?). All mentioned bugs, have some hidden quirk to reach, is not an obvious mistake by developer - quite opposite - code looks solid and well thought over, but you need magic eyes to catch those by analysis as a bug hunter, and fuzzing may change the game
-
-very similar (cancel or Vnd+TearDown) but different in nature (more fuzzy approach vs more static approach by my understanding) examples you can find by really cool resource [Mobius Band](https://i.blackhat.com/USA21/Wednesday-Handouts/us-21-Mobius-Band-Explore-Hyper-V-Attack-Interface-Through-Vulnerabilities-Internals.pdf)
-
-low hanging fruits is a luxury term, it always depends. After retrospective, we may call perhaps all memory corruption bugs low hanging fruits :) what can help you finding yours LHF is persistence, accumulated experience, luck and opportunity (time). 
-:::
+> ### Few highlights to note
+> all of them RCE + UAF, to be honest most of my bugs are races due to the nature of my fuzzing, but Hyper-V is not an eve's garden for data format bugs anyway.
+>bugs were not at fuzzing obvious target logic (files) path, but at the upper level (work items / packet handling)
+>for those bugs using code coverage-based fuzzer can shoot you in your feet at the very least. On the other side, as I mentioned above, code coverage can play an essential role if used appropriately (hinting at weak points of fuzzer instead of main logic of fuzzer)
+>Hyper-V is hard (?). All mentioned bugs, have some hidden quirk to reach, is not an obvious mistake by developer - quite opposite - code looks solid and well thought over, but you need magic eyes to catch those by analysis as a bug hunter, and fuzzing may change the game
+>very similar (cancel or Vnd+TearDown) but different in nature (more fuzzy approach vs more static approach by my understanding) examples you can find by really cool resource [Mobius Band](https://i.blackhat.com/USA21/Wednesday-Handouts/us-21-Mobius-Band-Explore-Hyper-V-Attack-Interface-Through-Vulnerabilities-Internals.pdf)
+>low hanging fruits is a luxury term, it always depends. After retrospective, we may call perhaps all memory corruption bugs low hanging fruits :) what can help you finding yours LHF is persistence, accumulated experience, luck and opportunity (time). 
 
 ## Teaser : Research on the Rise
 
